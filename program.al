@@ -1,10 +1,11 @@
 {
-    def a int
-    a := alloc(5)
-    def b ptr
-    b := a + 2
-    b := alloc(10)
-    b := a + 81
+    def c ptr
+    if (1) {
+        def a ptr
+        a := alloc (4)
+        // c := a + 0
+    }
+    def b int
 }
 
 

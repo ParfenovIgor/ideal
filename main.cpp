@@ -87,12 +87,12 @@ void draw() {
         attron(COLOR_PAIR(2));
         std::string number = std::to_string(line + 1);
         for (int pos = 0; pos < (int)number.size(); pos++) {
-            mvaddch(line, pos, number[pos]);
+            mvaddch(line + 1, pos, number[pos]);
         }
 
         if (!error) {
             for (int pos = 0; pos < (int)states[line].size(); pos++) {
-                mvaddch(line, pos + 30, states[line][pos]);
+                mvaddch(line + 1, pos + 50, states[line][pos]);
             }
         }
         attroff(COLOR_PAIR(2));
@@ -106,13 +106,13 @@ void draw() {
                 attron(COLOR_PAIR(3));
             if (line == cursor_line && pos == cursor_pos)
                 attron(COLOR_PAIR(1));
-            mvaddch(line, pos + 5, text[line][pos]);
+            mvaddch(line + 1, pos + 5, text[line][pos]);
             attroff(COLOR_PAIR(3));
             attroff(COLOR_PAIR(1));
         }
         if (line == cursor_line && (int)text[line].size() == cursor_pos) {
             attron(COLOR_PAIR(1));
-            mvaddch(cursor_line, cursor_pos + 5, ' ');
+            mvaddch(cursor_line + 1, cursor_pos + 5, ' ');
             attroff(COLOR_PAIR(1));
         }
     }
@@ -120,7 +120,7 @@ void draw() {
     if (error) {
         attron(COLOR_PAIR(3));
         for (int pos = 0; pos < (int)error_text.size(); pos++) {
-            mvaddch(20, pos, error_text[pos]);
+            mvaddch(0, pos, error_text[pos]);
         }
         attroff(COLOR_PAIR(3));
     }
@@ -134,7 +134,11 @@ void print_char(int key) {
     cursor_pos++;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc != 1) {
+        filename = std::string(argv[1]);
+    }
+
     initscr();
     noecho();
     curs_set(0);
