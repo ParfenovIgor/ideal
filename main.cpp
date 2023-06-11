@@ -11,7 +11,7 @@
 #include <functional>
 #include <algorithm>
 
-WINDOW *wCodeEditor, *wFiles, *wConsole;
+WINDOW *wCodeEditor, *wFiles, *wConsole, *wInfo;
 int wCodeEditorHeight = 40;
 int wConsoleHeight = 15;
 
@@ -109,11 +109,13 @@ void compile() {
         dup2(readpipe[1], 1);
         dup2(readpipe[1], 2);
         close(readpipe[1]);
-        char *args[4];
+        char *args[6];
         args[0] = strdup("calias");
-        args[1] = strdup("-c");
+        args[1] = strdup("-l");
         args[2] = strdup("main.al");
-        args[3] = NULL;
+        args[3] = strdup("-o");
+        args[4] = strdup("program");
+        args[5] = NULL;
         execvp("calias", args);
     }
     close(writepipe[0]);
@@ -235,6 +237,20 @@ void draw_wConsole() {
     wrefresh(wConsole);
 }
 
+void draw_wInfo() {
+    werase(wInfo);
+
+    box(wInfo, 0, 0);
+    mvwaddstr(wInfo, 0, 0, "Info");
+    mvwaddstr(wInfo, 1, 1, "F2 - Exit");
+    mvwaddstr(wInfo, 2, 1, "F3 - Compile");
+    mvwaddstr(wInfo, 3, 1, "F4 - Run");
+    mvwaddstr(wInfo, 4, 1, "F5 - Code Editor");
+    mvwaddstr(wInfo, 5, 1, "F6 - File Directory");
+    mvwaddstr(wInfo, 6, 1, "F7 - Console");
+    wrefresh(wInfo);
+}
+
 void draw() {
     if (draw_active) return;
     draw_active = true;
@@ -245,6 +261,7 @@ void draw() {
     draw_wCodeEditor();
     draw_wFiles();
     draw_wConsole();
+    draw_wInfo();
 
     draw_active = false;
 }
@@ -268,7 +285,7 @@ void validate() {
         close(readpipe[1]);
         char *args[4];
         args[0] = strdup("calias");
-        args[1] = strdup("-v");
+        args[1] = strdup("-s");
         args[2] = strdup("main.al");
         args[3] = NULL;
         execvp("calias", args);
@@ -277,8 +294,9 @@ void validate() {
     close(readpipe[1]);
 
     std::string stream;
-    char buffer[1000];
+    char buffer[1001];
     while (int size = read(readpipe[0], buffer, 1000)) {
+        buffer[size] = '\0';
         std::string str(buffer);
         stream += buffer;
     }
@@ -291,17 +309,19 @@ void validate() {
         if (str == "States") {
             programData.error = false;
             std::string filename;
-            std::getline(input, filename);
-            int data_cnt;
-            input >> data_cnt;
-            for (int i = 0; i < data_cnt; i++) {
-                int line;
-                std::string nstates;
-                char c;
-                input >> line >> c >> nstates;
-                while (programData.states[filename].size() <= line - 1)
-                    programData.states[filename].push_back("");
-                programData.states[filename][line - 1] = nstates;
+            while (std::getline(input, filename)) {
+                int data_cnt;
+                input >> data_cnt;
+                for (int i = 0; i < data_cnt; i++) {
+                    int line;
+                    std::string nstates;
+                    char c;
+                    input >> line >> c >> nstates;
+                    while (programData.states[filename].size() <= line - 1)
+                        programData.states[filename].push_back("");
+                    programData.states[filename][line - 1] = nstates;
+                }
+                std::getline(input, filename);
             }
         }
         else {
@@ -634,9 +654,10 @@ int main(int argc, char *argv[]) {
     init_pair(3, COLOR_RED, COLOR_BLACK);
     
     init("main.al");
-    wCodeEditor = newwin(40, 80, 0, 0);
-    wFiles = newwin(40, 30, 0, 80);
-    wConsole = newwin(15, 80, 40, 0);
+    wCodeEditor =   newwin(40, 80, 0, 0);
+    wFiles =        newwin(40, 30, 0, 80);
+    wConsole =      newwin(15, 80, 40, 0);
+    wInfo =         newwin(15, 30, 40, 80);
     console_text.push_back("> ");
     validate();
     draw();
